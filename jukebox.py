@@ -61,7 +61,7 @@ def color_spectrum(slice:np.ndarray) -> str:
 
 
 # determine brightness of current slice
-def brightness(slice:np.ndarray) -> float:
+def average_brightness(slice:np.ndarray) -> float:
     value = slice[:, :, 2]
     # return average brightness from 0.0 to 1.0
     return float(np.mean(value) / 255)
@@ -75,8 +75,53 @@ def pixel_density(slice:np.ndarray) -> float:
     return float(np.mean(edges) / 255)
 
 
+# look up matching chord
+def color_2_chord(color:str) -> str:
+    c2c = {
+        "red" : "G", "yellow": "C", "green" : "Em",
+        "cyan" : "Dm", "blue" : "Am", "magenta" : "F"
+    }
+    return c2c.get(color)
+
+
+# takes (color, brightness, density) of slice and maps it to (chord, volume, rhythm)
+def sonification(color:str, brightness:float, density:float) -> list:
+    chord = color_2_chord(color)
+    volume = brightness
+    if density > 0.5:
+        rhythm = "up"
+    else:
+        rhythm = "down"
+
+    return [chord, volume, rhythm]
+
+
+# iterate through all slices and create audio list
+def analyser(img_s:np.ndarray) -> list:
+    cbd = []
+    audio = []
+    # collect color, brightness, and density for each slice
+    for i, _ in enumerate(img_s):
+        color = color_spectrum(img_s[i])
+        brightness = average_brightness(img_s[i])
+        density = pixel_density(img_s[i])
+        cbd.append([color, brightness, density])
+
+    # compute max values and check for edge cases
+    max_brightness = max(b[1] for b in cbd)
+    max_density = max(d[2] for d in cbd)
+    if np.isclose(max_brightness, 0) or np.isclose(max_density, 0):
+        raise ValueError("Image is too dark!")
+    
+    # translate to chords, volume and rhythm
+    for j, _ in enumerate(cbd):
+        audio.append(sonification(cbd[j][0], cbd[j][1]/max_brightness, cbd[j][2]/max_density))
+    
+    return audio
+
+
 if __name__ == "__main__":
     file_name = "Images/Aerosols_2025-08-19T20_00_00_7680x4320.png"
     img = load_image(file_name)
     img_s = slice_image(img)
-    print(pixel_density(img_s[30]))
+    print(analyser(img_s))
