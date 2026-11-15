@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+from scipy.io import wavfile
 
 
 # loads 8K image and stores it as a numpy ndarray
@@ -101,10 +102,10 @@ def analyser(img_s:np.ndarray) -> list:
     cbd = []
     audio = []
     # collect color, brightness, and density for each slice
-    for i, _ in enumerate(img_s):
-        color = color_spectrum(img_s[i])
-        brightness = average_brightness(img_s[i])
-        density = pixel_density(img_s[i])
+    for i in img_s:
+        color = color_spectrum(i)
+        brightness = average_brightness(i)
+        density = pixel_density(i)
         cbd.append([color, brightness, density])
 
     # compute max values and check for edge cases
@@ -114,14 +115,39 @@ def analyser(img_s:np.ndarray) -> list:
         raise ValueError("Image is too dark!")
     
     # translate to chords, volume and rhythm
-    for j, _ in enumerate(cbd):
-        audio.append(sonification(cbd[j][0], cbd[j][1]/max_brightness, cbd[j][2]/max_density))
+    for j in cbd:
+        audio.append(sonification(j[0], j[1]/max_brightness, j[2]/max_density))
     
     return audio
+
+
+# converts audio list into 30 second WAV file
+def create_wav(audio:list):
+    # create dict that loads WAV files and stores them as ndarray
+    c_dir = {
+        ("Am", "down") : wavfile.read("Audio/Am[d].wav")[1], ("Am", "up") : wavfile.read("Audio/Am[u].wav")[1],
+        ("C", "down") : wavfile.read("Audio/C[d].wav")[1], ("C", "up") : wavfile.read("Audio/C[u].wav")[1],
+        ("Dm", "down") : wavfile.read("Audio/Dm[d].wav")[1], ("Dm", "up") : wavfile.read("Audio/Dm[u].wav")[1],
+        ("Em", "down") : wavfile.read("Audio/Em[d].wav")[1], ("Em", "up") : wavfile.read("Audio/Em[u].wav")[1],
+        ("F", "down") : wavfile.read("Audio/F[d].wav")[1], ("F", "up") : wavfile.read("Audio/F[u].wav")[1],
+        ("G", "down") : wavfile.read("Audio/G[d].wav")[1], ("G", "up") : wavfile.read("Audio/G[u].wav")[1]
+    }
+    
+    # go through audio list, cut samples half a second long and multiply by volume
+    samplerate = 44100
+    half_samplerate = int(samplerate * 0.5)
+    data = []
+    for i in audio:
+        data.append(np.float32(c_dir.get((i[0], i[2]))[:half_samplerate] * i[1]))
+
+    # create output file
+    data = np.concatenate(data, axis=0)
+    wavfile.write("output.wav", samplerate, data.astype(np.float32))
 
 
 if __name__ == "__main__":
     file_name = "Images/Aerosols_2025-08-19T20_00_00_7680x4320.png"
     img = load_image(file_name)
     img_s = slice_image(img)
-    print(analyser(img_s))
+    audio = analyser(img_s)
+    create_wav(audio)
