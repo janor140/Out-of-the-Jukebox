@@ -62,7 +62,9 @@ def color_spectrum(slice:np.ndarray) -> str:
 
 # determine brightness of current slice
 def brightness(slice:np.ndarray) -> float:
-    pass
+    value = slice[:, :, 2]
+    # return average brightness from 0.0 to 1.0
+    return float(np.mean(value) / 255)
 
 
 # determine pixel_density of current slice
@@ -74,4 +76,4 @@ if __name__ == "__main__":
     file_name = "Images/Aerosols_2025-08-19T20_00_00_7680x4320.png"
     img = load_image(file_name)
     img_s = slice_image(img)
-    print(color_spectrum(img_s[0]))
+    print(brightness(img_s[30]))
