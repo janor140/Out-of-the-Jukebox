@@ -28,7 +28,28 @@ def slice_image(img:np.ndarray) -> np.ndarray:
     return img_s
 
 
+# transform blue, green, red to hue, saturation, value
+def BGR2HSV(slice:np.ndarray) -> np.ndarray:
+    return cv.cvtColor(slice, cv.COLOR_BGR2HSV)
+
+
+# determine color spectrum of current slice
+def color_spectrum(hsv:np.ndarray):
+    pass
+
+
+# determine brightness of current slice
+def brightness(hsv:np.ndarray) -> float:
+    pass
+
+
+# determine pixel_density of current slice
+def pixel_density():
+    pass
+
+
 if __name__ == "__main__":
     file_name = "Images/Aerosols_2025-08-19T20_00_00_7680x4320.png"
     img = load_image(file_name)
     img_s = slice_image(img)
+    print(color_spectrum(img_s[0]))

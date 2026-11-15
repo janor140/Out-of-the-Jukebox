@@ -1,4 +1,4 @@
-# Out-of-the-Jukebox
+# Out of the Jukebox
 
 ## Requirements
 
