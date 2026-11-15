@@ -68,12 +68,15 @@ def brightness(slice:np.ndarray) -> float:
 
 
 # determine pixel_density of current slice
-def pixel_density():
-    pass
+def pixel_density(slice:np.ndarray) -> float:
+    value = slice[:, :, 2]
+    # detect edges
+    edges = cv.Canny(value, 100, 200)
+    return float(np.mean(edges) / 255)
 
 
 if __name__ == "__main__":
     file_name = "Images/Aerosols_2025-08-19T20_00_00_7680x4320.png"
     img = load_image(file_name)
     img_s = slice_image(img)
-    print(brightness(img_s[30]))
+    print(pixel_density(img_s[30]))
